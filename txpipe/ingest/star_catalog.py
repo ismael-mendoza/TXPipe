@@ -24,7 +24,7 @@ class TXIngestStarCatalog(PipelineStage):
     parallel = False
 
     outputs = [
-        ("dp2_star_catalog", HDFFile),
+        ("star_catalog", HDFFile),
     ]
 
     config_options = {
