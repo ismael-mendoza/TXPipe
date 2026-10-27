@@ -1,3 +1,5 @@
 TXIngestStarCatalog:
       hats_path: /global/cfs/cdirs/lsst/shared/rubin/DP2/HATS/object_collection
       num_lsdb_daskwokers: 10
+TXPSFDiagnostics:
+      shape_def: "g"

@@ -3,6 +3,15 @@ from ..data_types import HDFFile
 from ceci.config import StageParameter
 
 
+TXPIPE_ALIASING={
+    "moments_g1": "measured_g1",
+    "moments_g2": "measured_g2",
+    "moments_psf_g1": "model_g1",
+    "moments_psf_g2":"model_g2",
+    "moments_psf_trace": "measured_T",
+    "moments_trace": "model_T",
+}
+
 class TXIngestStarCatalog(PipelineStage):
     """
     Ingest the star catalog from the DP2 object table
@@ -118,7 +127,23 @@ class TXIngestStarCatalog(PipelineStage):
 
                 for name in result_table.columns:
                     if name.startswith(prefix):
-                        band[name.removeprefix(prefix)] = result_table[name]
+                        _name = name.removeprefix(prefix)
+                        if _name in TXPIPE_ALIASING:
+                            _new_name = TXPIPE_ALIASING[_name]
+                        else:
+                            _new_name = _name
+
+                        if _new_name in ("measured_T", "model_T"):
+                            value = convert_trace_radius_to_trace(result_table[name])
+                        else: 
+                            value = result_table[name]
+
+                        band[_new_name] = value
 
         # Close cluster
         client.close()
+
+
+def convert_trace_radius_to_trace(tr_radius):
+    # trace_radius = np.sqrt(0.5 * Tr)
+    return 2 * tr_radius**2

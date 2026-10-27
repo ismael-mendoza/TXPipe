@@ -16,6 +16,7 @@ STAR_TYPE_NAMES = ["PSF-used", "PSF-reserved"]
 STAR_COLORS = ["blue", "orange", "green"]
 
 
+
 class TXPSFDiagnostics(PipelineStage):
     """
     Make histograms of PSF values
@@ -28,12 +29,12 @@ class TXPSFDiagnostics(PipelineStage):
 
     inputs = [("star_catalog", HDFFile)]
     outputs = [
-        ("e1_psf_residual_hist", PNGFile),
-        ("e2_psf_residual_hist", PNGFile),
+        ("shape1_psf_residual_hist", PNGFile),
+        ("shape2_psf_residual_hist", PNGFile),
         ("T_frac_psf_residual_hist", PNGFile),
         ("star_psf_stats", YamlFile),
     ]
-    config_options = {}
+    config_options = {'shape_def': str}
 
     def run(self):
         # PSF tests
@@ -43,16 +44,24 @@ class TXPSFDiagnostics(PipelineStage):
 
         # Make plotters - in each case we supply the function to make
         # the thing we want to histogram, the name, label, and range
+        sdef = self.config['shape_def']
+        assert sdef in ("e", "g")
+
+        measured_s1_name = f"measured_{sdef}1"
+        measured_s2_name = f"measured_{sdef}2"
+        model_s1_name = f"model_{sdef}1"
+        model_s2_name = f"model_{sdef}2"
+
         plotters = [
             self.plot_histogram(
-                lambda d: (d["measured_e1"] - d["model_e1"]),
-                "e1_psf_residual",
-                "$e_{1}-e_{1,psf}$",
+                lambda d: (d[measured_s1_name] - d[model_s1_name]),
+                f"{sdef}1_psf_residual",
+                "${sf}_{1}-e_{1,psf}$",
                 np.linspace(-0.1, 0.1, 51),
             ),
             self.plot_histogram(
-                lambda d: (d["measured_e2"] - d["model_e2"]),
-                "e2_psf_residual",
+                lambda d: (d[model_s2_name] - d[measured_s2_name]),
+                f"{sdef}2_psf_residual",
                 "$e_{2}-e_{2,psf}$",
                 np.linspace(-0.1, 0.1, 51),
             ),
@@ -70,15 +79,16 @@ class TXPSFDiagnostics(PipelineStage):
             print(plotter)
             plotter.send(None)
 
+        
         # Create an iterator for reading through the input data.
         # This method automatically splits up data among the processes,
         # so the plotters should handle this.
         chunk_rows = 10000
         star_cols = [
-            "measured_e1",
-            "model_e1",
-            "measured_e2",
-            "model_e2",
+            model_s1_name,
+            measured_s1_name,
+            measured_s2_name,
+            model_s2_name,
             "measured_T",
             "model_T",
             "calib_psf_used",
