@@ -105,7 +105,7 @@ class TXIngestStarCatalog(PipelineStage):
         bands = self.config["bands"]
         common_variables = ["objectId", "parentObjectId", "tract", "patch", "coord_ra", "coord_dec"]
 
-        with self.open_output("dp2_star_catalog") as f:
+        with self.open_output("star_catalog") as f:
             stars = f.create_group("stars", track_order=True)
 
             for band_name in bands:
